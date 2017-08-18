@@ -24,12 +24,13 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import melektro.LogsFormatter;
-import static melektro.PublicIPAddress.Log;
-import static melektro.PublicIPAddress.SetLogger;
+import static melektro.LogsFormatter.Log;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+import org.telegram.telegrambots.generics.BotSession;
 
 /**
  *
@@ -49,20 +50,20 @@ public class PasteiBot {
         OutputStream output = null;
 
         try {
-            output = new FileOutputStream("PasteiTelegramBot.config.properties");
+            output = new FileOutputStream("PasteiBot.config.properties");
             prop.setProperty("BotUsername", "YourBotUsername");
             prop.setProperty("BotToken", "YourBotToken");
             prop.setProperty("TestMode", "false");
             prop.store(output, null);
 
         } catch (IOException e) {
-            Log("Excetion: "+e.getMessage());
+            Log("Exception: "+e.getMessage());
         } finally {
             if (output != null) {
                 try {
                     output.close();
                 } catch (IOException e) {
-                    Log("Excetion: "+e.getMessage());
+                    Log("Exception: "+e.getMessage());
                 }
             }
         }
@@ -81,11 +82,11 @@ public class PasteiBot {
         Properties prop = new Properties();
         InputStream input = null;
 
-        File file = new File("PasteiTelegramBot.config.properties");
+        File file = new File("PasteiBot.config.properties");
 
         if (!file.exists()) {
             SetProperties();
-            Log("Please configure the properties in the 'PasteiTelegramBot.config.properties' file.");
+            Log("Please configure the properties in the 'PasteiBot.config.properties' file.");
             System.exit(0);
         } else {
             try {
@@ -99,13 +100,13 @@ public class PasteiBot {
                 bTestMode = !TestMode.equals("false");
 
             } catch (IOException e) {
-                Log("Excetion: "+e.getMessage());
+                Log("Exception: "+e.getMessage());
             } finally {
                 if (input != null) {
                     try {
                         input.close();
                     } catch (IOException e) {
-                        Log("Excetion: "+e.getMessage());
+                        Log("Exception: "+e.getMessage());
                     }
                 }
             }
@@ -141,7 +142,7 @@ public class PasteiBot {
      * @throws java.lang.InterruptedException
      */
     public static void main(String[] args) throws InterruptedException {
-        SetLogger(new LogsFormatter().setLogging(Level.ALL));
+        Logger logger = new LogsFormatter().setLogging(Level.ALL);
         GetProperties();
         final GpioController gpio = GpioFactory.getInstance();
         final GpioPinDigitalOutput pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "MyLED", PinState.LOW);
@@ -155,17 +156,25 @@ public class PasteiBot {
             Log("Terminating");
             gpio.shutdown();
         }));
-
         
         ApiContextInitializer.init();
         TelegramBotsApi botsApi = new TelegramBotsApi();
+        
 
         try {
-            botsApi.registerBot(new TelegramBot(pin2));
+            BotSession registerBot = botsApi.registerBot(new TelegramBot(pin2, logger));
             Log("Listening ....");
         } catch (TelegramApiException e) {
-            Log("Excetion: "+e.getMessage());
+            Log("Exception: "+e.getMessage());
         }
+        
+        /*Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+            }
+        }, 0, 120*60*60);*/
+        
     }
 
 }
