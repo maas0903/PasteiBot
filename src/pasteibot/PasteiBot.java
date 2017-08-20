@@ -51,6 +51,7 @@ public class PasteiBot {
     private static String TwitterKeySecret = "YourTwitterKeySecret";
     private static String TwitterToken = "YourTwitterToken";
     private static String TwitterTokenSecret = "YourTwitterTokenSecret";
+    private static String Bot = "Telegram";
 
 
     private final String[] twitterCommand = {"ON", "OFF", "IP"};
@@ -61,6 +62,7 @@ public class PasteiBot {
 
         try {
             output = new FileOutputStream("PasteiBot.config.properties");
+            prop.setProperty("BotType", Bot);
             prop.setProperty("BotUsername", BotUsername);
             prop.setProperty("BotToken", BotToken);
             prop.setProperty("TestMode", "false");
@@ -108,6 +110,7 @@ public class PasteiBot {
                 input = new FileInputStream(file);
                 prop.load(input);
 
+                Bot = LoadProperty(prop, "BotType", "Telegram");
                 BotUsername = LoadProperty(prop, "BotUsername", "YourBotUsername");
                 BotToken = LoadProperty(prop, "BotToken", "YourBotToken");
                 ProxyToUse = LoadProperty(prop, "ProxyToUse", "");
@@ -178,7 +181,19 @@ public class PasteiBot {
             gpio.shutdown();
         }));
 
-        BotType botType = BotType.Twitter;
+        BotType botType = BotType.Telegram;
+        if (null == Bot) botType=null;
+        else switch (Bot.toLowerCase()) {
+            case "telegram":
+                botType=BotType.Telegram;
+                break;
+            case "twitter":
+                botType=BotType.Twitter;
+                break;
+            default:
+                botType=null;
+                break;
+        }
 
         switch (botType) {
             case Telegram:
