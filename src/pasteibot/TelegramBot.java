@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static melektro.LogsFormatter.Log;
 import org.telegram.telegrambots.api.methods.send.SendPhoto;
-
+import org.json.*;
 /**
  *
  * @author Marius
@@ -97,6 +97,12 @@ public class TelegramBot extends TelegramLongPollingBot {
                         } catch (IOException | InterruptedException e) {
                             Log("Exception taking photo: " + e.getMessage());
                         }   break;
+                    case "ISS":
+                        tmpMessage = "ISS Json=" + PasteiBot.GetIss();
+                        message.setText(tmpMessage);
+                        Log(tmpMessage);
+                        break;
+                        
                     default:
                         String sTxt = txt + " received - nothing to execute";
                         Log(sTxt);

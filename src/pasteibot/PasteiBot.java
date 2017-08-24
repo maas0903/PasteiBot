@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -135,18 +136,18 @@ public class PasteiBot {
             SetProperties();
         }
     }
-
-    public static String GetPublicIp() throws Exception {
-        URL whatismyip = new URL("http://checkip.amazonaws.com/");
+    
+    public static String MyWget(String Url) throws MalformedURLException, IOException{
+        URL url = new URL(Url);
         URLConnection connection;
         if (ProxyToUse.isEmpty()) {
-            connection = whatismyip.openConnection();
+            connection = url.openConnection();
         } else {
             Log("  proxy=" + ProxyToUse);
             Log("Using proxy");
             Log("  port=" + ProxyPortToUse);
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyToUse, Integer.parseInt(ProxyPortToUse)));
-            connection = whatismyip.openConnection(proxy);
+            connection = url.openConnection(proxy);
         }
         connection.addRequestProperty("Protocol", "Http/1.1");
         connection.addRequestProperty("Connection", "keep-alive");
@@ -155,8 +156,16 @@ public class PasteiBot {
 
         BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-        String ip = in.readLine();
-        return ip;
+        String ret = in.readLine();
+        return ret;
+    }
+
+    public static String GetPublicIp() throws Exception {
+        return MyWget("http://checkip.amazonaws.com/");
+    }
+    
+    public static String GetIss() throws IOException{
+        return MyWget("http://api.open-notify.org/iss-now.json?callback=?");
     }
 
     public enum BotType {
