@@ -35,12 +35,16 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final GpioPinDigitalOutput botPin;
     private static String proxyToUse;
     private static String proxyPort;
+    private static String Lat;
+    private static String Lon;
 
-    TelegramBot(GpioPinDigitalOutput pin, Logger LOGGER, String proxy, String proxyport) {
+    TelegramBot(GpioPinDigitalOutput pin, Logger LOGGER, String proxy, String proxyport, String lat, String lon) {
         botPin = pin;
         logger = LOGGER;
         proxyToUse = proxy;
         proxyPort = proxyport;
+        Lat = lat;
+        Lon = lon;
     }
 
     public void sendImageUploadingAFile(String filePath, String chatId) {
@@ -120,7 +124,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             Long tme = jsonObj.getLong("timestamp");
                             Log("Lat=" + lat + ", Lon=" + lon + ", time=" + tme);
 
-                            String when = GetIssWhen(proxyToUse, proxyPort, "50.92", "4.7", "5");
+                            String when = GetIssWhen(proxyToUse, proxyPort, Lat, Lon, "5");
                             jsonObj = new JSONObject(when);
 
                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");

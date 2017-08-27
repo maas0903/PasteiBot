@@ -38,7 +38,6 @@ import org.telegram.telegrambots.generics.BotSession;
 import static pasteibot.TwitterBot.TwitterSetup;
 import twitter4j.*;
 
-
 /**
  *
  * @author Marius
@@ -56,10 +55,11 @@ public class PasteiBot {
     private static String TwitterToken = "YourTwitterToken";
     private static String TwitterTokenSecret = "YourTwitterTokenSecret";
     private static String Bot = "Telegram";
-
+    private static String Lattitude = "";
+    private static String Longitude = "";
 
     private final String[] twitterCommand = {"ON", "OFF", "IP"};
-    
+
     private static void SetProperties() {
         Properties prop = new Properties();
         OutputStream output = null;
@@ -74,6 +74,8 @@ public class PasteiBot {
             prop.setProperty("TwitterKeySecret", TwitterKeySecret);
             prop.setProperty("TwitterToken", TwitterToken);
             prop.setProperty("TwitterTokenSecret", TwitterTokenSecret);
+            prop.setProperty("Lattitude", Lattitude);
+            prop.setProperty("Longitude", Longitude);
 
             prop.store(output, null);
 
@@ -124,6 +126,8 @@ public class PasteiBot {
                 TwitterKeySecret = LoadProperty(prop, "TwitterKeySecret", "YourTwitterKeySecret");
                 TwitterToken = LoadProperty(prop, "TwitterToken", "YourTwitterToken");
                 TwitterTokenSecret = LoadProperty(prop, "TwitterTokenSecret", "YourTwitterTokenSecret");
+                Lattitude = LoadProperty(prop, "Lattitude", "50.88");
+                Longitude = LoadProperty(prop, "Longitude", "4.70");
 
             } catch (IOException e) {
                 Log("Exception: " + e.getMessage());
@@ -163,17 +167,20 @@ public class PasteiBot {
         }));
 
         BotType botType = BotType.Telegram;
-        if (null == Bot) botType=null;
-        else switch (Bot.toLowerCase()) {
-            case "telegram":
-                botType=BotType.Telegram;
-                break;
-            case "twitter":
-                botType=BotType.Twitter;
-                break;
-            default:
-                botType=null;
-                break;
+        if (null == Bot) {
+            botType = null;
+        } else {
+            switch (Bot.toLowerCase()) {
+                case "telegram":
+                    botType = BotType.Telegram;
+                    break;
+                case "twitter":
+                    botType = BotType.Twitter;
+                    break;
+                default:
+                    botType = null;
+                    break;
+            }
         }
 
         switch (botType) {
@@ -182,7 +189,8 @@ public class PasteiBot {
                 TelegramBotsApi botsApi = new TelegramBotsApi();
 
                 try {
-                    BotSession registerBot = botsApi.registerBot(new TelegramBot(pin2, logger, ProxyToUse, ProxyPortToUse));
+                    BotSession registerBot = botsApi.registerBot(
+                            new TelegramBot(pin2, logger, ProxyToUse, ProxyPortToUse, Lattitude, Longitude));
                     Log("Listening ....");
                 } catch (TelegramApiException e) {
                     Log("Exception: " + e.getMessage());
@@ -219,13 +227,13 @@ public class PasteiBot {
                                     case "OFF":
                                         pin2.low();
                                         Log("Should be " + Command);
-                                {
-                                    try {
-                                        SendDirectMessage(twitter, status, "Should be " + Command);
-                                    } catch (TwitterException ex) {
-                                        Logger.getLogger(PasteiBot.class.getName()).log(Level.SEVERE, null, ex);
-                                    }
-                                }
+                                         {
+                                            try {
+                                                SendDirectMessage(twitter, status, "Should be " + Command);
+                                            } catch (TwitterException ex) {
+                                                Logger.getLogger(PasteiBot.class.getName()).log(Level.SEVERE, null, ex);
+                                            }
+                                        }
                                         break;
                                     case "IP":
                                         String ip = null;
@@ -271,7 +279,7 @@ public class PasteiBot {
 
                         private void SendDirectMessage(Twitter twitter, Status status, String txt) throws TwitterException {
                             String id = "@" + status.getUser().getScreenName();
-                            Log("Sending '"+txt+"' to "+id.toString());
+                            Log("Sending '" + txt + "' to " + id.toString());
                             twitter.sendDirectMessage(id, txt);
                         }
                     };
