@@ -28,7 +28,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import melektro.LogsFormatter;
+import melektro.ExtAPIs;
 import static melektro.LogsFormatter.Log;
+import static melektro.MyWget.MyWget;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -36,14 +38,15 @@ import org.telegram.telegrambots.generics.BotSession;
 import static pasteibot.TwitterBot.TwitterSetup;
 import twitter4j.*;
 
+
 /**
  *
  * @author Marius
  */
 public class PasteiBot {
 
-    public static String ProxyToUse = "";
-    public static String ProxyPortToUse = "";
+    private static String ProxyToUse = "";
+    private static String ProxyPortToUse = "";
     public static String BotUsername = "YourBotUsername";
     public static String BotToken = "YourBotToken";
     private static final String TestMode = "false";
@@ -136,37 +139,6 @@ public class PasteiBot {
             SetProperties();
         }
     }
-    
-    public static String MyWget(String Url) throws MalformedURLException, IOException{
-        URL url = new URL(Url);
-        URLConnection connection;
-        if (ProxyToUse.isEmpty()) {
-            connection = url.openConnection();
-        } else {
-            Log("  proxy=" + ProxyToUse);
-            Log("Using proxy");
-            Log("  port=" + ProxyPortToUse);
-            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ProxyToUse, Integer.parseInt(ProxyPortToUse)));
-            connection = url.openConnection(proxy);
-        }
-        connection.addRequestProperty("Protocol", "Http/1.1");
-        connection.addRequestProperty("Connection", "keep-alive");
-        connection.addRequestProperty("Keep-Alive", "1000");
-        connection.addRequestProperty("User-Agent", "Web-Agent");
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-
-        String ret = in.readLine();
-        return ret;
-    }
-
-    public static String GetPublicIp() throws Exception {
-        return MyWget("http://checkip.amazonaws.com/");
-    }
-    
-    public static String GetIss() throws IOException{
-        return MyWget("http://api.open-notify.org/iss-now.json?callback=?");
-    }
 
     public enum BotType {
         Telegram, Twitter
@@ -210,7 +182,7 @@ public class PasteiBot {
                 TelegramBotsApi botsApi = new TelegramBotsApi();
 
                 try {
-                    BotSession registerBot = botsApi.registerBot(new TelegramBot(pin2, logger));
+                    BotSession registerBot = botsApi.registerBot(new TelegramBot(pin2, logger, ProxyToUse, ProxyPortToUse));
                     Log("Listening ....");
                 } catch (TelegramApiException e) {
                     Log("Exception: " + e.getMessage());
@@ -258,7 +230,7 @@ public class PasteiBot {
                                     case "IP":
                                         String ip = null;
                                         try {
-                                            ip = GetPublicIp();
+                                            ip = ExtAPIs.GetPublicIp(ProxyToUse, ProxyPortToUse);
                                             Log("Public IP Address=" + ip);
                                             SendDirectMessage(twitter, status, "Public IP Address=" + ip);
                                         } catch (Exception ex) {
