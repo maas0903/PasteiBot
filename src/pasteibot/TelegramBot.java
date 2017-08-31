@@ -12,18 +12,26 @@ import org.telegram.telegrambots.exceptions.TelegramApiException;
 
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static melektro.ExtAPIs.GetIss;
 import static melektro.ExtAPIs.GetIssWhen;
 import static melektro.ExtAPIs.GetPublicIp;
+import static melektro.LoadProperty.LoadProperty;
 import static melektro.LogsFormatter.Log;
 import org.telegram.telegrambots.api.methods.send.SendPhoto;
 import org.json.*;
+import static pasteibot.PasteiBot.BotToken;
+import static pasteibot.PasteiBot.BotUsername;
 
 /**
  *
@@ -37,6 +45,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private static String proxyPort;
     private static String Lat;
     private static String Lon;
+    private static String user_id_Config;
 
     TelegramBot(GpioPinDigitalOutput pin, Logger LOGGER, String proxy, String proxyport, String lat, String lon) {
         botPin = pin;
@@ -45,6 +54,60 @@ public class TelegramBot extends TelegramLongPollingBot {
         proxyPort = proxyport;
         Lat = lat;
         Lon = lon;
+    }
+
+    private static void GetProperties() {
+        Properties prop = new Properties();
+        InputStream input = null;
+
+        File file = new File("TelegramBot.Admin");
+
+        if (!file.exists()) {
+            SetProperties();
+            Log("Please configure the properties in the 'TelegramBot.Admin' file.");
+            System.exit(0);
+        } else {
+            try {
+                input = new FileInputStream(file);
+                prop.load(input);
+
+                user_id_Config = LoadProperty(prop, "user_id", "");
+
+            } catch (IOException e) {
+                Log("Exception: " + e.getMessage());
+            } finally {
+                if (input != null) {
+                    try {
+                        input.close();
+                    } catch (IOException e) {
+                        Log("Exception: " + e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    private static void SetProperties() {
+        Properties prop = new Properties();
+        OutputStream output = null;
+
+        try {
+            output = new FileOutputStream("TelegramBot.Admin");
+            prop.setProperty("user_id", "");
+
+            prop.store(output, null);
+
+        } catch (IOException e) {
+            Log("Exception: " + e.getMessage());
+        } finally {
+            if (output != null) {
+                try {
+                    output.close();
+                } catch (IOException e) {
+                    Log("Exception: " + e.getMessage());
+                }
+            }
+        }
     }
 
     public void sendImageUploadingAFile(String filePath, String chatId) {
@@ -72,6 +135,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                     .setChatId(update.getMessage().getChatId())
                     .setText(update.getMessage().getText());
             try {
+                Integer user_id = update.getMessage().getFrom().getId();
+                Log("user_id=" + user_id);
+                GetProperties();
                 String txt = message.getText();
                 if (null == txt.toUpperCase()) {
                     String sTxt = txt + " received - nothing to execute";
@@ -80,17 +146,23 @@ public class TelegramBot extends TelegramLongPollingBot {
                 } else {
                     switch (txt.toUpperCase()) {
                         case "ON":
-                            botPin.high();
-                            Log("Should be On");
+                            if (user_id.toString().equals(user_id_Config)) {
+                                botPin.high();
+                                Log("Should be On");
+                            }
                             break;
                         case "OFF":
-                            botPin.low();
-                            Log("Should be Off");
+                            if (user_id.toString().equals(user_id_Config)) {
+                                botPin.low();
+                                Log("Should be Off");
+                            }
                             break;
                         case "IP":
-                            tmpMessage = "Public Ip Address is: " + GetPublicIp(proxyToUse, proxyPort);
-                            message.setText(tmpMessage);
-                            Log(tmpMessage);
+                            if (user_id.toString().equals(user_id_Config)) {
+                                tmpMessage = "Public Ip Address is: " + GetPublicIp(proxyToUse, proxyPort);
+                                message.setText(tmpMessage);
+                                Log(tmpMessage);
+                            }
                             break;
                         case "EXIT":
                             tmpMessage = "Exiting application";
@@ -116,7 +188,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                             break;
                         case "ISS":
                             String issJson = GetIss(proxyToUse, proxyPort);
-                            tmpMessage = "ISS Json=" + issJson+"\r\n\r\n";
+                            tmpMessage = "ISS Json=" + issJson + "\r\n\r\n";
                             Log(tmpMessage);
                             JSONObject jsonObj = new JSONObject(issJson);
                             String lat = jsonObj.getJSONObject("iss_position").getString("latitude");
@@ -126,6 +198,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
                             String when = GetIssWhen(proxyToUse, proxyPort, Lat, Lon, "5");
                             jsonObj = new JSONObject(when);
+                            Log("When="+when);
 
                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                             int duration;
@@ -141,7 +214,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                                         .ofEpochSecond(timeStamp)
                                         .atZone(ZoneId.of("GMT+2"))
                                         .format(formatter);
-                                tmpMessage += "risetime=" + date + ", duration=" + duration+"\r\n";
+                                tmpMessage += "risetime=" + date + ", duration=" + duration + "\r\n";
                                 Log("risetime=" + date + ", duration=" + duration);
                             }
                             message.setText(tmpMessage);

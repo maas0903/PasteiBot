@@ -1,0 +1,3 @@
+2017-08-28 18:00:05.510 - [melektro.LogsFormatter.setLogging] - [CONFIG] - Logging configuration done. Filename=./Logs_20170828.log
+2017-08-28 18:00:05.556 - [melektro.LogsFormatter.Log] - [ALL] - Please configure the properties in the 'PasteiBot.config.properties' file.
+2017-08-28 18:01:16.986 - [melektro.LogsFormatter.setLogging] - [CONFIG] - Logging configuration done. Filename=./Logs_20170828.log

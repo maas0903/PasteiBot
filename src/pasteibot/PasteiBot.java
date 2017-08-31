@@ -10,27 +10,20 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import melektro.LogsFormatter;
 import melektro.ExtAPIs;
+import static melektro.LoadProperty.LoadProperty;
 import static melektro.LogsFormatter.Log;
-import static melektro.MyWget.MyWget;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -92,15 +85,6 @@ public class PasteiBot {
         }
     }
 
-    private static String LoadProperty(Properties prop, String property, String defaultvalue) {
-        String PropertyValue = prop.getProperty(property);
-        if (PropertyValue != null) {
-            return PropertyValue;
-        } else {
-            return defaultvalue;
-        }
-    }
-
     private static void GetProperties() {
         Properties prop = new Properties();
         InputStream input = null;
@@ -155,6 +139,7 @@ public class PasteiBot {
     public static void main(String[] args) throws InterruptedException, TwitterException, Exception {
         Logger logger = new LogsFormatter().setLogging(Level.ALL);
         GetProperties();
+
         final GpioController gpio = GpioFactory.getInstance();
         final GpioPinDigitalOutput pin = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_02, "MyLED", PinState.LOW);
         final GpioPinDigitalOutput pin2 = gpio.provisionDigitalOutputPin(RaspiPin.GPIO_03, "MyLED", PinState.LOW);
